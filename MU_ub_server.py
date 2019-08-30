@@ -14,53 +14,49 @@ exchange = 'CME'
 current_symbol = 'UBU9' 
 big_trade_size = 20
 
-load_symbols = ['ZNU9', 'ZTU9', 'ZFU9', 'ZBU9', 'UBU9','ZNZ9', 'ZTZ9', 'ZFZ9', 'ZBZ9', 'UBZ9']
+load_symbols = ['ZNU9', 'ZTU9', 'ZFU9', 'ZBU9', 'UBU9', 'ZNZ9', 'ZTZ9', 'ZFZ9', 'ZBZ9', 'UBZ9']
 
-date_list = ['2019-08-27']
+date_list = ['2019-08-26']
 for d in date_list:
 
     date = d
 
     qrm_columns = ['captureTime', 'captureTimeStr', 'messageTime', 'messageTimeStr',
-                      'packetSeqNum', 'messageId', 'entryId', 'eventId', 'rptSeq']
+                   'packetSeqNum', 'messageId', 'entryId', 'eventId', 'rptSeq']
 
     for sym in load_symbols:
         col = ['CME:' + sym + '_bidPrice_1', 'CME:' + sym + '_bidOrders_1', 'CME:' + sym + '_bidQty_1',
-                  'CME:' + sym + '_tradeType', 'CME:' + sym + '_tradeAggSide', 'CME:' + sym + '_tradePrice',
-                  'CME:' + sym + '_tradeQty', 'CME:' + sym + '_tradeNumOrders', 'CME:' + sym + '_tradeOrderId',
-                  'CME:' + sym + '_askPrice_1', 'CME:' + sym + '_askOrders_1', 'CME:' + sym + '_askQty_1']
+               'CME:' + sym + '_tradeType', 'CME:' + sym + '_tradeAggSide', 'CME:' + sym + '_tradePrice',
+               'CME:' + sym + '_tradeQty', 'CME:' + sym + '_tradeNumOrders', 'CME:' + sym + '_tradeOrderId',
+               'CME:' + sym + '_askPrice_1', 'CME:' + sym + '_askOrders_1', 'CME:' + sym + '_askQty_1']
 
         qrm_columns = qrm_columns + col
         col = None
 
-
     qrm_symbols = []
     for sym in load_symbols:
-        qrm_symbols.append('CME:'+sym)
+        qrm_symbols.append('CME:' + sym)
 
-
-    
     qrm_file_name = 'qrm_data_' + date + '_all.pkl.gz'
     qrm_data = pd.read_pickle(qrm_file_name, compression='gzip')
 
-    qrm_data = qrm_data.loc[:,qrm_columns]
+    qrm_data = qrm_data.loc[:, qrm_columns]
 
     qrm_data['captureTimeStr'] = pd.to_datetime(qrm_data['captureTime'], unit='ns')
     qrm_data['messageTimeStr'] = pd.to_datetime(qrm_data['messageTime'], unit='ns')
     qrm_data['captureTimeStr'] = qrm_data['captureTimeStr'].dt.tz_localize('GMT').dt.tz_convert('US/Central')
     qrm_data['messageTimeStr'] = qrm_data['messageTimeStr'].dt.tz_localize('GMT').dt.tz_convert('US/Central')
 
-
     col = qrm_data.columns[qrm_data.columns.str.contains(current_symbol + '_trade')]
     col = ['captureTimeStr', 'messageTimeStr', 'eventId', 'packetSeqNum'] + col.tolist()
 
     qrm_zn_big = qrm_data[col]
-    qrm_zn_big = qrm_zn_big[(qrm_zn_big['CME:' + current_symbol + '_tradeQty'] >= big_trade_size) & (qrm_zn_big['CME:' + current_symbol + '_tradeType'] == 6) & (
+    qrm_zn_big = qrm_zn_big[(qrm_zn_big['CME:' + current_symbol + '_tradeQty'] >= big_trade_size) &
+                            (qrm_zn_big['CME:' + current_symbol + '_tradeType'] == 6) & (
                                     qrm_zn_big['CME:' + current_symbol + '_tradeAggSide'] != 0)]
-    qrm_zn_big = qrm_zn_big.drop(columns=['CME:' + current_symbol + '_tradeType', 'CME:' + current_symbol + '_tradeOrderId'])
-
-        
-    
+    qrm_zn_big = qrm_zn_big.drop(
+        columns=['CME:' + current_symbol + '_tradeType', 'CME:' + current_symbol + '_tradeOrderId'])
+    """
     all_df_columns = ['captureTimeStr', 'messageTimeStr', 'eventId', 'packetSeqNum',
                       'CME:' + current_symbol + '_tradeAggSide', 'CME:' + current_symbol + '_tradePrice',
                       'CME:' + current_symbol + '_tradeQty',
@@ -72,19 +68,20 @@ for d in date_list:
                'CME:' + sym + '_tradeQty', 'CME:' + sym + '_tradeNumOrders',
                'WR_' + sym + '_1Sec', 'WR_' + sym + '_5Sec', 'WR_' + sym + '_30Sec',
                'WR_' + sym + '_60Sec', 'WR_' + sym + '_300Sec',
-               sym + '_1_Sec_MU', sym + '_5_Sec_MU', sym+ '_30_Sec_MU',
+               sym + '_1_Sec_MU', sym + '_5_Sec_MU', sym + '_30_Sec_MU',
                sym + '_60_Sec_MU', sym + '_300_Sec_MU']
 
         all_df_columns = all_df_columns + col
         col = None
 
-
-
-
-    all_df_columns = all_df_columns + ['Events_delta', 'time_delta_in_mics', 'count','Total_1_Sec_MU', 'Total_5_Sec_MU', 'Total_30_Sec_MU',
+    all_df_columns = all_df_columns + ['Events_delta', 'time_delta_in_mics', 'count', 'Total_1_Sec_MU',
+                                       'Total_5_Sec_MU', 'Total_30_Sec_MU',
                                        'Total_60_Sec_MU', 'Total_300_Sec_MU']
 
 
+    all_df = pd.DataFrame(columns=all_df_columns)
+    """
+    first = 0
     for num_zn_big in range(len(qrm_zn_big)):
         # getting trades that immediately follow big trade
 
@@ -99,15 +96,20 @@ for d in date_list:
 
         trades_after_df = qrm_data[col]
         trades_after_df = trades_after_df[(trades_after_df['messageTimeStr'] > capture_transactTime) & (
-                    trades_after_df['messageTimeStr'] <= (
-                        capture_transactTime + timedelta(microseconds=time_delta_trade_after)))]
+                trades_after_df['messageTimeStr'] <= (
+                capture_transactTime + timedelta(microseconds=time_delta_trade_after)))]
         trades_after_df = trades_after_df.reset_index(drop=True)
 
         trade_type = qrm_data.columns[qrm_data.columns.str.contains('tradeType')]
 
-        trades_after_df = trades_after_df[(trades_after_df[trade_type[0]] == 6) | (trades_after_df[trade_type[1]] == 6) | (
-                    trades_after_df[trade_type[2]] == 6) | (trades_after_df[trade_type[3]] == 6) | (
-                                                      trades_after_df[trade_type[4]] == 6)]
+        trade_type_col = []
+        for i in range(len(load_symbols)):
+            trade_type_col.append('(trades_after_df[trade_type[' + str(i) + ']] == 6)')
+
+        query = ' | '.join(['{}'.format(trade_type_col[i]) for i in range(0, len(load_symbols))])
+
+        trades_after_df = trades_after_df[eval(query)]
+
 
         trades_after_df['Events_delta'] = 0
         # trades_after_df['Events_delta_of_considering_only_concerned_ORs'] = 0
@@ -134,6 +136,7 @@ for d in date_list:
         if (len(all_df_temp) > 0):
             all_df_temp['count'] = num_zn_big
 
+            time_delta_after_capture = [1, 5, 30, 60, 300]  # in Seconds
             mu_columns = []
             for ele in load_symbols:
                 col = []
@@ -148,7 +151,7 @@ for d in date_list:
 
                 mu_columns = mu_columns + col
 
-            MU = pd.DataFrame(columns=[mu_columns])
+            MU = pd.DataFrame(columns=mu_columns)
 
             for n in range(len(all_df_temp)):
                 new_transactTime = all_df_temp['messageTimeStr'].iloc[n]
@@ -156,13 +159,8 @@ for d in date_list:
                 qrm_book_after = qrm_data[(qrm_data['messageTimeStr'] >= new_transactTime) & (
                         qrm_data['messageTimeStr'] <= (new_transactTime + timedelta(seconds=301)))]
                 sym_MU_all_t = []
-                time_delta_after_capture = [1, 5, 30, 60, 300]  # in Seconds
 
-                symbols = []
-                for ele in load_symbols:
-                    symbols.append(ele[:2])
-
-                for sym in symbols:
+                for sym in load_symbols:
                     sym_MU = []
                     col = qrm_book_after.columns[
                         qrm_book_after.columns.str.contains(sym)]  # get all column s pertaining to a symbol
@@ -182,9 +180,12 @@ for d in date_list:
                         sym_MU.append(pd.DataFrame(temp.iloc[-1:].reset_index(drop=True)))
                     sym_MU_all_t.append(pd.concat([sym_MU[0], sym_MU[1], sym_MU[2], sym_MU[3], sym_MU[4]], axis=1))
 
-                MU_temp = pd.concat([sym_MU_all_t[0], sym_MU_all_t[1], sym_MU_all_t[2], sym_MU_all_t[3], sym_MU_all_t[4]],
-                                    axis=1)
-                MU = pd.concat([MU, MU_temp])
+                MU_temp = sym_MU_all_t[0]
+
+                for i in range(len(load_symbols) - 1):
+                    MU_temp = pd.concat([MU_temp, sym_MU_all_t[i + 1]], axis=1)
+
+                MU = pd.concat([MU, MU_temp], ignore_index=True)
                 MU = MU.reset_index(drop=True)
 
             all_df_temp = pd.concat([all_df_temp, MU], axis=1)
@@ -218,8 +219,8 @@ for d in date_list:
             for ele in load_symbols:
                 all_df_temp.loc[
                     all_df_temp['CME:' + ele + '_tradeQty'].isna(), ['WR_' + ele + '_1Sec', 'WR_' + ele + '_5Sec',
-                                                                       'WR_' + ele + '_30Sec', 'WR_' + ele + '_60Sec',
-                                                                       'WR_' + ele + '_300Sec']] = 0
+                                                                     'WR_' + ele + '_30Sec', 'WR_' + ele + '_60Sec',
+                                                                     'WR_' + ele + '_300Sec']] = 0
                 all_df_temp = all_df_temp[all_df_temp['CME:' + ele + '_tradeAggSide'] != 0]  # remove implied trades
 
             # WR - buy_price or sell_price - WR
@@ -230,47 +231,48 @@ for d in date_list:
 
             for ele in load_symbols:
                 all_df_temp.loc[all_df_temp['CME:' + ele + '_tradeAggSide'] == 2, [ele + '_1_Sec_MU', ele + '_5_Sec_MU',
-                                                                                     ele + '_30_Sec_MU', ele + '_60_Sec_MU',
-                                                                                     ele + '_300_Sec_MU']] = -1 * \
-                                                                                                             all_df_temp.loc[
-                                                                                                                 all_df_temp[
-                                                                                                                     'CME:' + ele + '_tradeAggSide'] == 2, [
-                                                                                                                     ele + '_1_Sec_MU',
-                                                                                                                     ele + '_5_Sec_MU',
-                                                                                                                     ele + '_30_Sec_MU',
-                                                                                                                     ele + '_60_Sec_MU',
-                                                                                                                     ele + '_300_Sec_MU']]
+                                                                                   ele + '_30_Sec_MU',
+                                                                                   ele + '_60_Sec_MU',
+                                                                                   ele + '_300_Sec_MU']] = -1 * \
+                                                                                                           all_df_temp.loc[
+                                                                                                               all_df_temp[
+                                                                                                                   'CME:' + ele + '_tradeAggSide'] == 2, [
+                                                                                                                   ele + '_1_Sec_MU',
+                                                                                                                   ele + '_5_Sec_MU',
+                                                                                                                   ele + '_30_Sec_MU',
+                                                                                                                   ele + '_60_Sec_MU',
+                                                                                                                   ele + '_300_Sec_MU']]
 
             """
-    
-    
-    
+
+
+
             path =  'Y:\\2019_08_14\\securityDefs.h5'
             dt = tables.open_file(path, mode="r")
             secdef = pd.DataFrame(dt.get_node('/SecurityDefinitions').read())
             secdef = secdef.applymap(lambda x: x.decode() if isinstance(x, bytes) else x)
-    
+
             secdef = secdef[['securityId', 'symbol', 'displayFactorInt','displayFactorRaw', 'minPriceIncrement', 'asset', 'rawToIntMult','priceRatio']]
             secdef[secdef['symbol']=="UBU9"]['minPriceIncrement']
-    
-    
+
+
             zn_tick_size = 0.015625
             zn_tick_value = 15.625
-    
-    
+
+
             zt_tick_size = 0.003906
             zt_tick_value = 7.8125
-    
+
             zf_tick_size = 0.007812
             zf_tick_value = 7.8125
-    
-    
+
+
             zb_tick_size = 0.03125
             zb_tick_value = 31.25
-    
+
             ub_tick_size = 0.03125
             ub_tick_value = 31.25
-    
+
             """
 
             # tick value/ tick size multiplied by price difference
@@ -287,26 +289,46 @@ for d in date_list:
                                                                                                                     :,
                                                                                                                     'CME:' + ele + '_tradeQty']
 
-            for delta in time_delta:
-                x = 0
-                for ele in load_symbols:
-                    x+= all_df_temp[ele + '_' + delta + '_Sec_MU']
-                all_df_temp['Total_' + delta + '_Sec_MU'] = x 
+
 
             if (num_zn_big == len(qrm_zn_big)):
                 all_df_temp = pd.concat([qrm_zn_big.iloc[num_zn_big:].reset_index(drop=True), all_df_temp], axis=1)
             else:
-                all_df_temp = pd.concat([qrm_zn_big.iloc[num_zn_big:(num_zn_big + 1)].reset_index(drop=True), all_df_temp],
-                                        axis=1)
+                all_df_temp = pd.concat(
+                    [qrm_zn_big.iloc[num_zn_big:(num_zn_big + 1)].reset_index(drop=True), all_df_temp],
+                    axis=1)
+
+            if (first == 0):
+                all_df = pd.DataFrame(columns=all_df_temp.columns)
+
+            first = first + 1
 
             all_df = pd.concat([all_df, all_df_temp], ignore_index=True, sort=False)
             all_df = all_df.drop_duplicates()
 
-    
-    all_df.loc[all_df.duplicated(subset=all_df.columns[8:34]), all_df.columns[12:]] = np.nan
+    for delta in time_delta:
+        all_df['Total_' + delta + '_Sec_MU'] = 0
 
-    file_name = current_symbol[:2] + '_' + date + '.csv'
-    all_df.to_csv(file_name, index = False)
+    
+    total_mu_col = []
+    for i in range(len(time_delta)):
+        mu_col = []
+        for ele in load_symbols:
+            mu_col.append(ele + '_' + time_delta[i] + '_Sec_MU')
+
+        total_mu_col.append(mu_col)
+
+    for i in range(len(time_delta)):
+        all_df['Total_' + time_delta[i] + '_Sec_MU'] = all_df[total_mu_col[i]].sum(axis=1)
+
+
+
+    last_col_pos = 8 + len(load_symbols) * 4 + 6
+    all_df.loc[all_df.duplicated(subset=all_df.columns[8:last_col_pos]), all_df.columns[12:]] = np.nan
+
+    file_name = current_symbol + '_' + date + '.csv'
+    all_df.to_csv(file_name, index=False)
+
 
 
 
